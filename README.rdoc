@@ -1,7 +1,5 @@
-== Кто хочет стать миллионером?!
+== Who Wants to Be a Millionaire? ?!
 
-Игра для детей от 12 до 159 лет.
-
-Учебное приложение курса по Ruby on Rails от «Хорошего программиста». В продакшене настроено на работу с Heroku.
+This is a game based on the TV quiz.
 
 © http://goodprogrammer.ru
