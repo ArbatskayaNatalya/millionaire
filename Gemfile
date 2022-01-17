@@ -1,5 +1,7 @@
 source 'https://rubygems.org'
 
+ruby '~> 2.5.9'
+
 gem 'rails', '~> 4.2.6'
 
 # Удобная админка для управления любыми сущностями
@@ -19,7 +21,7 @@ group :development, :test do
   gem 'sqlite3', '~> 1.3.13'
   gem 'byebug'
   gem 'rspec-rails', '~> 3.4'
-  gem 'factory_girl_rails'
+  gem "factory_bot_rails"
   gem 'shoulda-matchers'
 
   # Гем, который использует rspec, чтобы смотреть наш сайт
@@ -33,5 +35,5 @@ group :production do
   # гем, улучшающий вывод логов на Heroku
   # https://devcenter.heroku.com/articles/getting-started-with-rails4#heroku-gems
   gem 'rails_12factor'
-  gem 'pg'
+  gem 'pg', '~> 0.21'
 end

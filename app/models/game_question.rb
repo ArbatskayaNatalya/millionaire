@@ -1,19 +1,9 @@
-#  (c) goodprogrammer.ru
-#
-
 require 'game_help_generator'
 
-# Игровой вопрос — при создании новой игры формируется массив
-# из 15 игровых вопросов для конкретной игры и игрока.
 class GameQuestion < ActiveRecord::Base
-
   belongs_to :game
-
-  # вопрос из которого берется вся информация
   belongs_to :question
 
-  # создаем в этой модели виртуальные геттеры text, level, значения которых
-  # автоматически берутся из связанной модели question
   delegate :text, :level, to: :question, allow_nil: true
 
   # без игры и вопроса - игровой вопрос не имеет смысла
