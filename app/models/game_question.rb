@@ -6,30 +6,11 @@ class GameQuestion < ActiveRecord::Base
 
   delegate :text, :level, to: :question, allow_nil: true
 
-  # без игры и вопроса - игровой вопрос не имеет смысла
   validates :game, :question, presence: true
-
-  # в полях a,b,c,d прячутся индексы ответов из объекта :game
   validates :a, :b, :c, :d, inclusion: {in: 1..4}
 
-  # Автоматическая сериализация поля в базу (мы юзаем как обычный хэш,
-  # а рельсы в базе хранят как строчку)
-  # см. ссылки в материалах урока
   serialize :help_hash, Hash
 
-  # help_hash у нас имеет такой формат:
-  # {
-  #   fifty_fifty: ['a', 'b'], # При использовании подсказски остались варианты a и b
-  #   audience_help: {'a' => 42, 'c' => 37 ...}, # Распределение голосов по вариантам a, b, c, d
-  #   friend_call: 'Василий Петрович считает, что правильный ответ A'
-  # }
-  #
-
-
-  # ----- Основные методы для доступа к данным в шаблонах и контроллерах -----------
-
-  # Возвращает хэш, отсортированный по ключам:
-  # {'a' => 'Текст ответа Х', 'b' => 'Текст ответа У', ... }
   def variants
     {
       'a' => question.read_attribute("answer#{a}"),
@@ -39,12 +20,10 @@ class GameQuestion < ActiveRecord::Base
     }
   end
 
-  # Возвращает истину, если переданная буква (строка или символ) содержит верный ответ
   def answer_correct?(letter)
     correct_answer_key == letter.to_s.downcase
   end
 
-  # ключ правильного ответа 'a', 'b', 'c', или 'd'
   def correct_answer_key
     {a => 'a', b => 'b', c => 'c', d => 'd'}[1]
   end
