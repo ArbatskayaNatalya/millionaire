@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe GameQuestion, type: :model do
 
   let(:game_question) do
-    FactoryBot.create(:game_question, a: 2, b: 1, c: 4, d: 3)
+    create(:game_question, a: 2, b: 1, c: 4, d: 3)
   end
 
   context 'game status' do
@@ -15,7 +15,7 @@ RSpec.describe GameQuestion, type: :model do
     end
 
     it 'correct .answer_correct?' do
-      expect(game_question.answer_correct?('b')).to be_truthy
+      expect(game_question.answer_correct?('b')).to be(true)
     end
 
     it 'correct level & text delegates' do
