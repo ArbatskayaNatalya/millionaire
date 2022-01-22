@@ -22,14 +22,16 @@ RSpec.describe GameQuestion, type: :model do
       expect(game_question.level).to eq(game_question.question.level)
       expect(game_question.text).to eq(game_question.question.text)
     end
+  end
 
-    it 'correct_answer_key' do
+  describe '#correct_answer_key' do
+    it 'returns correct answer key' do
       expect(game_question.correct_answer_key).to eq('b')
     end
   end
 
   context 'user helpers' do
-    it 'correct audience_help' do
+    it 'returns correct audience_help' do
       expect(game_question.help_hash).not_to include(:audience_help)
 
       game_question.add_audience_help
