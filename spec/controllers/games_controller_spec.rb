@@ -6,64 +6,81 @@ RSpec.describe GamesController, type: :controller do
   let(:admin) { FactoryBot.create(:user, is_admin: true) }
   let(:game_w_questions) { FactoryBot.create(:game_with_questions, user: user) }
 
-
-  context 'when user is not signed in' do
-    it 'kick from #show' do
-      get :show, id: game_w_questions.id
-      expect(response.status).not_to eq(200)
-      expect(response).to redirect_to(new_user_session_path) # devise redirect for anon
-      expect(flash[:alert]).to be
+  describe '#create' do
+    context 'when user is not signed in' do
+      it 'kick from #answer' do
+        post :create
+        expect(response.status).not_to eq(200)
+        expect(response).to redirect_to(new_user_session_path)
+        expect(flash[:alert]).to be
+      end
     end
 
-    it 'kick from #create' do
-      post :create
-      expect(response.status).not_to eq(200)
-      expect(response).to redirect_to(new_user_session_path)
-      expect(flash[:alert]).to be
+    context 'when user is signed in' do
+      before do
+        sign_in user
+        generate_questions(60)
+        post :create
+      end
+
+      let(:game) { assigns(:game) }
+
+      it 'continues game' do
+        expect(game.finished?).to be(false)
+        expect(game.user).to eq(user)
+      end
+
+      it 'redirect to right routes' do
+        expect(response).to redirect_to(game_path(game))
+      end
+
+      it 'has notice flash' do
+        expect(flash[:notice]).to be
+      end
     end
 
-    it 'kick from #take_money' do
-      put :take_money, id: game_w_questions.id
-      expect(response.status).not_to eq(200)
-      expect(response).to redirect_to(new_user_session_path)
-      expect(flash[:alert]).to be
-    end
-
-    it 'kick from #help' do
-      put :help, id: game_w_questions.id
-      expect(response.status).not_to eq(200)
-      expect(response).to redirect_to(new_user_session_path)
-      expect(flash[:alert]).to be
+    context 'when user tries to create a second game when the first one is not finished' do
+      before { sign_in user }
+      it 'try to create second game' do
+        expect(game_w_questions.finished?).to be_falsey
+        expect { post :create }.to change(Game, :count).by(0)
+        game = assigns(:game)
+        expect(game).to be_nil
+        expect(response).to redirect_to(game_path(game_w_questions))
+        expect(flash[:alert]).to be
+      end
     end
   end
 
-  context 'when user is signed in' do
-    before { sign_in user }
-
-    it 'creates game' do
-      generate_questions(60)
-
-      post :create
-      game = assigns(:game) # вытаскиваем из контроллера поле @game
-
-      expect(game.finished?).to be(false)
-      expect(game.user).to eq(user)
-
-      expect(response).to redirect_to(game_path(game))
-      expect(flash[:notice]).to be
+  describe '#show' do
+    context 'when user is not signed in' do
+      it 'kick from #show' do
+        get :show, id: game_w_questions.id
+        expect(response.status).not_to eq(200)
+        expect(response).to redirect_to(new_user_session_path) # devise redirect for anon
+        expect(flash[:alert]).to be
+      end
     end
 
-    it '#show game' do
-      get :show, id: game_w_questions.id
-      game = assigns(:game) # вытаскиваем из контроллера поле @game
-      expect(game.finished?).to be(false)
-      expect(game.user).to eq(user)
+    context 'when user is signed in' do
+      before do
+        sign_in user
+        get :show, id: game_w_questions.id
+      end
 
-      expect(response.status).to eq(200)
-      expect(response).to render_template('show') # render viev show
+      let(:game) { assigns(:game) }
+
+      it '#show game' do
+        expect(game.finished?).to be(false)
+        expect(game.user).to eq(user)
+
+        expect(response.status).to eq(200)
+        expect(response).to render_template('show') # render viev show
+      end
     end
 
     context 'when user try to open someone else`s game' do
+      before { sign_in user }
       it '#show alien game' do
         alien_game = FactoryBot.create(:game_with_questions)
 
@@ -74,8 +91,31 @@ RSpec.describe GamesController, type: :controller do
         expect(flash[:alert]).to be
       end
     end
+  end
 
-    context 'when user try to take money' do
+  describe '#help' do
+    context 'when user is not signed in' do
+      it 'kick from #help' do
+        put :help, id: game_w_questions.id
+        expect(response.status).not_to eq(200)
+        expect(response).to redirect_to(new_user_session_path)
+        expect(flash[:alert]).to be
+      end
+    end
+  end
+
+  describe '#take_money' do
+    context 'when user is not signed in' do
+      it 'kick from #take_money' do
+        put :take_money, id: game_w_questions.id
+        expect(response.status).not_to eq(200)
+        expect(response).to redirect_to(new_user_session_path)
+        expect(flash[:alert]).to be
+      end
+    end
+
+    context 'when user is signed in' do
+      before { sign_in user }
       it 'takes money' do
         # up current level question
         game_w_questions.update_attribute(:current_level, 2)
@@ -91,20 +131,6 @@ RSpec.describe GamesController, type: :controller do
 
         expect(response).to redirect_to(user_path(user))
         expect(flash[:warning]).to be
-      end
-    end
-
-    context 'when user tries to create a second game when the first one is not finished' do
-      it 'try to create second game' do
-        expect(game_w_questions.finished?).to be_falsey
-
-        expect { post :create }.to change(Game, :count).by(0)
-
-        game = assigns(:game)
-        expect(game).to be_nil
-
-        expect(response).to redirect_to(game_path(game_w_questions))
-        expect(flash[:alert]).to be
       end
     end
   end
@@ -126,13 +152,13 @@ RSpec.describe GamesController, type: :controller do
       context 'when the answer is correct' do
         before { put :answer, id: game_w_questions.id, letter: game_w_questions.current_game_question.correct_answer_key }
 
-        it 'returns correct game status' do
+        it 'continues game' do
           expect(game.finished?).to be(false)
           expect(game.status).to eq(:in_progress)
           expect(game.current_level).to be(1)
         end
 
-        it 'redirect to right routes' do
+        it 'redirects to right routes' do
           expect(response).to redirect_to(game_path(game))
         end
 
@@ -149,13 +175,77 @@ RSpec.describe GamesController, type: :controller do
           expect(game.status).to eq(:fail)
         end
 
-        it 'redirect to right routes' do
+        it 'redirects to right routes' do
           expect(response).to redirect_to(user_path(user))
         end
 
         it 'has alert flash' do
           expect(flash[:alert]).to be
         end
+      end
+    end
+  end
+
+  describe '.#audience_help_used' do
+    before { sign_in user }
+    it 'returns empty key before use' do
+      expect(game_w_questions.current_game_question.help_hash[:audience_help]).not_to be
+      expect(game_w_questions.audience_help_used).to be(false)
+    end
+
+    context 'when help of audience is used' do
+      before { put :help, id: game_w_questions.id, help_type: :audience_help }
+      let(:game) { assigns(:game) }
+
+      it 'continues game' do
+        expect(game.finished?).to be(false)
+        expect(game.status).to eq(:in_progress)
+      end
+
+      it 'include added key after use' do
+        expect(game.audience_help_used).to be(true)
+        expect(game.current_game_question.help_hash[:audience_help]).to be
+      end
+      it 'returns all valid answers key ' do
+        expect(game.current_game_question.help_hash[:audience_help].keys).to contain_exactly('a', 'b', 'c', 'd')
+      end
+      it 'redirects to game_path' do
+        expect(response).to redirect_to(game_path(game))
+      end
+    end
+  end
+
+  describe '.#add_fifty_fifty' do
+    before { sign_in user }
+    it 'returns empty key before use' do
+      expect(game_w_questions.current_game_question.help_hash[:fifty_fifty]).not_to be
+      expect(game_w_questions.fifty_fifty_used).to be(false)
+    end
+
+    context 'when 50/50 help is used' do
+      before { put :help, id: game_w_questions.id, help_type: :fifty_fifty }
+      let(:game) { assigns(:game) }
+
+      it 'continues game' do
+        expect(game.finished?).to be(false)
+        expect(game.status).to eq(:in_progress)
+      end
+
+      it 'includes added key after use' do
+        expect(game.fifty_fifty_used).to be(true)
+        expect(game.current_game_question.help_hash[:fifty_fifty]).to be
+      end
+
+      it 'returns correct answer key' do
+        expect(game.current_game_question.help_hash[:fifty_fifty]).to include(game.current_game_question.correct_answer_key)
+      end
+
+      it 'returns two variants' do
+        expect(game.current_game_question.help_hash[:fifty_fifty].size).to eq(2)
+      end
+
+      it 'redirects to game_path' do
+        expect(response).to redirect_to(game_path(game))
       end
     end
   end

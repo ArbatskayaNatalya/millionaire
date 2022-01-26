@@ -1,34 +1,22 @@
-# (c) goodprogrammer.ru
-#
-# Основной игровой контроллер
-# Создает новую игру, обновляет статус игры по ответам юзера, выдает подсказки
-#
 class GamesController < ApplicationController
   before_action :authenticate_user!
 
-  # проверка нет ли у залогиненного юзера начатой игры
   before_action :goto_game_in_progress!, only: [:create]
 
-  # загружаем игру из базы для текущего юзера
   before_action :set_game, except: [:create]
 
-  # проверка - если игра завершена, отправляем юзера на его профиль,
-  # где он может увидеть статистику сыгранных игр
   before_action :redirect_from_finished_game!, except: [:create]
 
   def show
     @game_question = @game.current_game_question
   end
 
-  # создаем новую игру и отправляем на экшен #show в случае успеха
   def create
     begin
-      # создаем игру для залогиненного юзера
       @game = Game.create_game_for_user!(current_user)
 
-      # отправляемся на страницу игры
       redirect_to game_path(@game), notice: I18n.t('controllers.games.game_created', created_at: @game.created_at)
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => ex # если ошибка создания игры
+      rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => ex # если ошибка создания игры
       Rails.logger.error("Error creating game for user #{current_user.id}, msg = #{ex}. #{ex.backtrace}")
       # отправляемся назад с алертом
       redirect_to :back, alert: I18n.t('controllers.games.game_not_created')
@@ -86,7 +74,6 @@ class GamesController < ApplicationController
 
     redirect_to game_path(@game), msg
   end
-
 
   private
 
