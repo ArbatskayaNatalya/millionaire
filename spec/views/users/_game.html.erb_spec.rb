@@ -1,14 +1,12 @@
 require 'rails_helper'
 
 RSpec.describe 'users/_game', type: :view do
-  let(:game) do
-    FactoryBot.build_stubbed(
+  let(:game) do build_stubbed(
       :game, id: 15, created_at: Time.parse('2016.10.09, 13:00'), current_level: 10, prize: 1000
     )
   end
 
-  before(:each) do
-    # Разрешаем объекту game в ответ на вызов метода status возвращать символ :in_progress
+  before do
     allow(game).to receive(:status).and_return(:in_progress)
 
     render partial: 'users/game', object: game

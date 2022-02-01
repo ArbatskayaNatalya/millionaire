@@ -3,8 +3,6 @@ source 'https://rubygems.org'
 ruby '~> 2.5.9'
 
 gem 'rails', '~> 4.2.6'
-
-# Удобная админка для управления любыми сущностями
 gem 'rails_admin'
 
 gem 'devise', '~> 4.1.1'
@@ -23,17 +21,14 @@ group :development, :test do
   gem 'rspec-rails', '~> 3.4'
   gem "factory_bot_rails"
   gem 'shoulda-matchers'
+end
 
-  # Гем, который использует rspec, чтобы смотреть наш сайт
+group :test do
   gem 'capybara'
-
-  # Гем, который позволяет смотреть, что видит capybara
   gem 'launchy'
 end
 
 group :production do
-  # гем, улучшающий вывод логов на Heroku
-  # https://devcenter.heroku.com/articles/getting-started-with-rails4#heroku-gems
   gem 'rails_12factor'
   gem 'pg', '~> 0.21'
 end

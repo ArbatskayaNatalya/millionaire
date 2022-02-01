@@ -1,23 +1,17 @@
 require 'rails_helper'
 
-# Тест на шаблон games/_game_question.html.erb
-
 RSpec.describe 'games/game_question', type: :view do
-  # Создадим тестовый объект game_question, который будет доступен в каждом it,
-  # где он понадобится
-  let(:game_question) { FactoryBot.build_stubbed :game_question }
+  let(:game_question) { build_stubbed :game_question }
 
-  before(:each) do
+  before do
     allow(game_question).to receive(:text).and_return('Кому на Руси жить хорошо?')
     allow(game_question).to receive(:variants).and_return(
       {'a' => 'Всем', 'b' => 'Никому', 'c' => 'Животным', 'd' => 'Людям'}
     )
   end
 
-  # Проверяем, что шаблон выводит текст вопроса
   it 'renders question text' do
     render_partial
-
     expect(rendered).to match 'Кому на Руси жить хорошо?'
   end
 

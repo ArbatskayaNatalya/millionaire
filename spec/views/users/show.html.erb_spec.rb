@@ -2,10 +2,10 @@ require 'rails_helper'
 
 RSpec.describe 'users/show', type: :view do
   context 'when the current user view his page' do
-    before(:each) do
-      user = assign(:user, FactoryBot.build_stubbed(:user, name: 'User1'))
+    before do
+      user = assign(:user, build_stubbed(:user, name: 'User1'))
       allow(view).to receive(:current_user).and_return(user)
-      assign(:games, [FactoryBot.build_stubbed(:game)])
+      assign(:games, [build_stubbed_list(:game, 1)])
       stub_template 'users/_game.html.erb' => 'User game goes here'
       render
     end
