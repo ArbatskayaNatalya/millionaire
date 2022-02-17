@@ -5,7 +5,7 @@ RSpec.describe 'users/show', type: :view do
     before do
       user = assign(:user, build_stubbed(:user, name: 'User1'))
       allow(view).to receive(:current_user).and_return(user)
-      assign(:games, [build_stubbed_list(:game, 1)])
+      assign(:games, build_stubbed_list(:game, 1, user: user))
       stub_template 'users/_game.html.erb' => 'User game goes here'
       render
     end
@@ -23,7 +23,7 @@ RSpec.describe 'users/show', type: :view do
 
   context 'when the user views someone else`s page' do
     before do
-      assign(:user, FactoryBot.build_stubbed(:user, name: 'User2'))
+      assign(:user, build_stubbed(:user, name: 'User2'))
 
       render
     end
